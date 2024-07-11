@@ -2,13 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"syscall"
 )
 
-func main() {
+func getDiskUsage(path string) {
 	var stat syscall.Statfs_t
-	path := "/"
-	syscall.Statfs(path, &stat)
+	err := syscall.Statfs(path, &stat)
+	if err != nil {
+		fmt.Printf("Error fetching disk usage for %s: %v\n", path, err)
+		return
+	}
 	total := stat.Blocks * uint64(stat.Bsize)
 	free := stat.Bfree * uint64(stat.Bsize)
 	used := total - free
@@ -16,4 +20,12 @@ func main() {
 	fmt.Printf("Total: %d GB\n", total/1e9)
 	fmt.Printf("Used: %d GB\n", used/1e9)
 	fmt.Printf("Free: %d GB\n", free/1e9)
+}
+
+func main() {
+	path := "/"
+	if len(os.Args) > 1 {
+		path = os.Args[1]
+	}
+	getDiskUsage(path)
 }
